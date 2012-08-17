@@ -3,7 +3,7 @@
 
 Name:           cudd
 Version:        2.5.0
-Release:        1
+Release:        2
 Summary:        CU Decision Diagram Package
 Group:          Sciences/Mathematics
 License:        BSD
