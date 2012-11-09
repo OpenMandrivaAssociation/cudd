@@ -1,0 +1,37 @@
+--- ./cudd/cuddZddGroup.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddZddGroup.c	2012-02-20 13:13:41.646120208 -0700
+@@ -171,7 +171,9 @@ Cudd_MakeZddTreeNode(
+     ** Cudd_bddNewVarAtLevel or Cudd_addNewVarAtLevel to create new
+     ** variables have to create the variables before they group them.
+     */
+-    level = (low < (unsigned int) dd->sizeZ) ? dd->permZ[low] : low;
++    level = (low < (unsigned int) dd->sizeZ)
++      ? (unsigned int) dd->permZ[low]
++      : low;
+ 
+     if (level + size - 1> (int) MTR_MAXHIGH)
+ 	return(NULL);
+--- ./cudd/cuddGroup.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddGroup.c	2012-02-20 13:13:41.645120209 -0700
+@@ -215,7 +215,9 @@ Cudd_MakeTreeNode(
+     ** Cudd_bddNewVarAtLevel or Cudd_addNewVarAtLevel to create new
+     ** variables have to create the variables before they group them.
+     */
+-    level = (low < (unsigned int) dd->size) ? dd->perm[low] : low;
++    level = (low < (unsigned int) dd->size)
++      ? (unsigned int) dd->perm[low]
++      : low;
+ 
+     if (level + size - 1> (int) MTR_MAXHIGH)
+ 	return(NULL);
+--- ./st/st.c.orig	2012-02-04 17:25:15.000000000 -0700
++++ ./st/st.c	2012-02-20 13:13:41.647120207 -0700
+@@ -54,7 +54,7 @@ static char rcsid[] UTIL_UNUSED = " $Id:
+ #define st_shift 2
+ #endif
+ 
+-#define ST_PTRHASH(x,size) ((unsigned int)((unsigned long)(x)>>st_shift)%size)
++#define ST_PTRHASH(x,size) ((int)((unsigned long)(x)>>st_shift)%size)
+ 
+ #define EQUAL(func, x, y) \
+     ((((func) == st_numcmp) || ((func) == st_ptrcmp)) ?\

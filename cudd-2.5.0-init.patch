@@ -1,0 +1,530 @@
+--- ./nanotrav/ntr.c.orig	2012-02-04 18:53:42.000000000 -0700
++++ ./nanotrav/ntr.c	2012-02-20 15:16:44.870399164 -0700
+@@ -998,6 +998,7 @@ Ntr_SCC(
+ 	    if (tmp == NULL) return(0);
+ 	    init = Cudd_bddPickOneMinterm(dd,tmp,TR->x,TR->nlatches);
+ 	} else {
++	    tmp = NULL;
+ 	    init = Cudd_bddPickOneMinterm(dd,states,TR->x,TR->nlatches);
+ 	}
+ 	if (init == NULL) return(0);
+--- ./nanotrav/bnet.c.orig	2012-02-04 18:53:42.000000000 -0700
++++ ./nanotrav/bnet.c	2012-02-20 15:16:44.872399161 -0700
+@@ -1923,7 +1923,8 @@ buildMuxBDD(
+     assert(controlC != -1 && controlR != -1);
+     /* At this point we know that there is indeed no column with two
+     ** dashes. The control column has been identified, and we know that
+-    ** its two elelments are different. */
++    ** its two elements are different. */
++    mux[0] = mux[1] = phase[0] = phase[1] = 0;
+     for (j = 0; j < 3; j++) {
+ 	if (j == controlC) continue;
+ 	if (values[controlR][j] == '1') {
+--- ./cudd/cuddLinear.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddLinear.c	2012-02-20 15:16:44.872399161 -0700
+@@ -366,7 +366,10 @@ cuddLinearInPlace(
+     int    xindex, yindex;
+     int    xslots, yslots;
+     int    xshift, yshift;
+-    int    oldxkeys, oldykeys;
++#if defined(DD_COUNT) || defined(DD_DEBUG)
++    int    oldxkeys;
++#endif
++    int    oldykeys;
+     int    newxkeys, newykeys;
+     int    comple, newcomplement;
+     int    i;
+@@ -399,7 +402,9 @@ cuddLinearInPlace(
+ #endif
+ 	/* Get parameters of x subtable. */
+ 	xlist = table->subtables[x].nodelist;
++#if defined(DD_COUNT) || defined(DD_DEBUG)
+ 	oldxkeys = table->subtables[x].keys;
++#endif
+ 	xslots = table->subtables[x].slots;
+ 	xshift = table->subtables[x].shift;
+ 
+@@ -426,9 +431,7 @@ cuddLinearInPlace(
+ 	** last points to the end.
+ 	*/
+ 	g = NULL;
+-#ifdef DD_DEBUG
+ 	last = NULL;
+-#endif
+ 	for (i = 0; i < xslots; i++) {
+ 	    f = xlist[i];
+ 	    if (f == sentinel) continue;
+--- ./cudd/cuddZddGroup.c.orig	2012-02-20 15:16:31.190413138 -0700
++++ ./cudd/cuddZddGroup.c	2012-02-20 15:16:44.873399160 -0700
+@@ -434,7 +434,7 @@ zddReorderChildren(
+   Cudd_ReorderingType method)
+ {
+     int lower;
+-    int upper;
++    int upper=0;
+     int result;
+     unsigned int initialSize;
+ 
+@@ -1086,7 +1086,7 @@ zddGroupMove(
+     Move *move;
+     int  size;
+     int  i,j,xtop,xbot,xsize,ytop,ybot,ysize,newxtop;
+-    int  swapx,swapy;
++    int  swapx=0,swapy=0;
+ #if defined(DD_DEBUG) && defined(DD_VERBOSE)
+     int  initialSize,bestSize;
+ #endif
+--- ./cudd/cuddDecomp.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddDecomp.c	2012-02-20 15:18:25.349296523 -0700
+@@ -1833,6 +1833,8 @@ BuildConjuncts(
+ 	    if (freeNv) FREE(factorsNv);
+ 	    return(factors);
+ 	}
++    } else {
++	factorsNv = NULL;
+     }
+ 
+     /* build ge, he recursively */
+@@ -1859,6 +1861,8 @@ BuildConjuncts(
+ 	    if (freeNnv) FREE(factorsNnv);
+ 	    return(factors);
+ 	}
++    } else {
++	factorsNnv = NULL;
+     }
+ 
+     /* construct the 2 pairs */
+--- ./cudd/cuddReorder.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddReorder.c	2012-02-20 15:16:44.875399158 -0700
+@@ -614,7 +614,7 @@ cuddSwapping(
+     int	iterate;
+     int previousSize;
+     Move *moves, *move;
+-    int	pivot;
++    int	pivot = 0;
+     int	modulo;
+     int result;
+ 
+--- ./cudd/cuddPriority.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddPriority.c	2012-02-20 15:16:44.876399157 -0700
+@@ -781,6 +781,7 @@ Cudd_Inequality(
+     else if ((-(1 << N) + 1) >= c) return(one);
+ 
+     /* Build the result bottom up. */
++    map[0] = map[1] = NULL;
+     for (i = 1; i <= N; i++) {
+ 	int kTrueLower, kFalseLower;
+ 	int leftChild, middleChild, rightChild;
+@@ -789,6 +790,7 @@ Cudd_Inequality(
+ 	DdNode *newMap[2];
+ 	int newIndex[2];
+ 
++	newMap[0] = newMap[1] = NULL;
+ 	kTrueLower = kTrue;
+ 	kFalseLower = kFalse;
+ 	/* kTrue = ceiling((c-1)/2^i) + 1 */
+@@ -969,6 +971,7 @@ Cudd_Disequality(
+     if ((1 << N) - 1 < c || (-(1 << N) + 1) > c) return(one);
+ 
+     /* Build the result bottom up. */
++    map[0] = map[1] = NULL;
+     for (i = 1; i <= N; i++) {
+ 	int kTrueLbLower, kTrueUbLower;
+ 	int leftChild, middleChild, rightChild;
+@@ -977,6 +980,7 @@ Cudd_Disequality(
+ 	DdNode *newMap[2];
+ 	int newIndex[2];
+ 
++	newMap[0] = newMap[1] = NULL;
+ 	kTrueLbLower = kTrueLb;
+ 	kTrueUbLower = kTrueUb;
+ 	/* kTrueLb = floor((c-1)/2^i) + 2 */
+@@ -1457,6 +1461,7 @@ cuddCProjectionRecur(
+ 	    RT = Cudd_Not(RT); RE = Cudd_Not(RE);
+ 	}
+     } else {
++	index = 0;
+ 	RT = RE = R;
+     }
+ 
+--- ./cudd/cuddSymmetry.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddSymmetry.c	2012-02-20 15:16:44.877399156 -0700
+@@ -1484,10 +1484,10 @@ ddSymmGroupMove(
+   Move ** moves)
+ {
+     Move *move;
+-    int	 size;
++    int	 size=0;
+     int  i,j;
+     int  xtop,xbot,xsize,ytop,ybot,ysize,newxtop;
+-    int  swapx,swapy;
++    int  swapx=0,swapy=0;
+ 
+ #ifdef DD_DEBUG
+     assert(x < y);	/* we assume that x < y */
+--- ./cudd/cuddZddReord.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddZddReord.c	2012-02-20 15:16:44.878399155 -0700
+@@ -491,7 +491,7 @@ cuddZddSwapInPlace(
+     int		i;
+     int		posn;
+     DdNode	*f, *f1, *f0, *f11, *f10, *f01, *f00;
+-    DdNode	*newf1, *newf0, *next;
++    DdNode	*newf1 = NULL, *newf0, *next;
+     DdNodePtr	g, *lastP, *previousP;
+ 
+ #ifdef DD_DEBUG
+@@ -752,7 +752,7 @@ cuddZddSwapping(
+     int iterate;
+     int previousSize;
+     Move *moves, *move;
+-    int	pivot;
++    int	pivot = 0;
+     int modulo;
+     int result;
+ 
+--- ./cudd/cuddZddSymm.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddZddSymm.c	2012-02-20 15:16:44.879399154 -0700
+@@ -1495,7 +1495,7 @@ zdd_group_move(
+     Move	*move;
+     int		size;
+     int		i, temp, gxtop, gxbot, gybot, yprev;
+-    int		swapx, swapy;
++    int		swapx = 0, swapy = 0;
+ 
+ #ifdef DD_DEBUG
+     assert(x < y);	/* we assume that x < y */
+--- ./cudd/cuddSubsetSP.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddSubsetSP.c	2012-02-20 15:22:30.437046162 -0700
+@@ -1345,6 +1345,8 @@ BuildSubsetBdd(
+ 	thenDone++;
+ 	processingDone++;
+ 	NvBotDist = MAXSHORTINT;
++	regNv = NULL;
++	NvPathLength = 0;
+     } else {
+ 	/* Derive regular child for table lookup. */
+ 	regNv = Cudd_Regular(Nv);
+@@ -1389,6 +1391,8 @@ BuildSubsetBdd(
+ 	elseDone++;
+ 	processingDone++;
+ 	NnvBotDist = MAXSHORTINT;
++	regNnv = NULL;
++	NnvPathLength = NvPathLength = 0;
+     } else {
+ 	/* Derive regular child for table lookup. */
+ 	regNnv = Cudd_Regular(Nnv);
+--- ./cudd/cuddAddWalsh.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddAddWalsh.c	2012-02-20 15:16:44.880399153 -0700
+@@ -339,6 +339,8 @@ addWalshInt(
+ 	}
+ 	cuddRef(t);
+ 	Cudd_RecursiveDeref(dd, w);
++    } else {
++	t = NULL;
+     }
+     cuddDeref(minusone); /* minusone is in the result; it won't die */
+ 
+--- ./cudd/cuddBddIte.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddBddIte.c	2012-02-20 15:16:44.880399153 -0700
+@@ -748,7 +748,7 @@ cuddBddIteRecur(
+     DdNode	 *one, *zero, *res;
+     DdNode	 *r, *Fv, *Fnv, *Gv, *Gnv, *H, *Hv, *Hnv, *t, *e;
+     unsigned int topf, topg, toph, v;
+-    int		 index;
++    int		 index = 0;
+     int		 comple;
+ 
+     statLine(dd);
+--- ./cudd/cuddAddIte.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddAddIte.c	2012-02-20 15:16:44.881399152 -0700
+@@ -447,7 +447,7 @@ cuddAddIteRecur(
+     DdNode *one,*zero;
+     DdNode *r,*Fv,*Fnv,*Gv,*Gnv,*Hv,*Hnv,*t,*e;
+     unsigned int topf,topg,toph,v;
+-    int index;
++    int index = 0;
+ 
+     statLine(dd);
+     /* Trivial cases. */
+--- ./cudd/cuddGroup.c.orig	2012-02-20 15:16:31.191413136 -0700
++++ ./cudd/cuddGroup.c	2012-02-20 15:16:44.882399151 -0700
+@@ -458,7 +458,7 @@ ddReorderChildren(
+   Cudd_ReorderingType method)
+ {
+     int lower;
+-    int upper;
++    int upper = 0;
+     int result;
+     unsigned int initialSize;
+ 
+@@ -1501,7 +1501,7 @@ ddGroupMove(
+     Move *move;
+     int  size;
+     int  i,j,xtop,xbot,xsize,ytop,ybot,ysize,newxtop;
+-    int  swapx,swapy;
++    int  swapx=0,swapy=0;
+ #if defined(DD_DEBUG) && defined(DD_VERBOSE)
+     int  initialSize,bestSize;
+ #endif
+@@ -1681,14 +1681,12 @@ ddGroupSiftingBackward(
+ {
+     Move *move;
+     int  res;
+-    Move *end_move;
++    Move *end_move = NULL;
+     int diff, tmp_diff;
+     int index;
+     unsigned int pairlev;
+ 
+     if (lazyFlag) {
+-	end_move = NULL;
+-
+ 	/* Find the minimum size, and the earliest position at which it
+ 	** was achieved. */
+ 	for (move = moves; move != NULL; move = move->next) {
+--- ./cudd/cuddTable.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddTable.c	2012-02-20 15:16:44.883399150 -0700
+@@ -1942,6 +1942,8 @@ cuddInsertSubtables(
+ 		return(0);
+ 	    }
+ 	    unique->memused += (newsize - unique->maxSize) * sizeof(int);
++	} else {
++	    newmap = NULL;
+ 	}
+ 	unique->memused += (newsize - unique->maxSize) * ((numSlots+1) *
+ 	    sizeof(DdNode *) + 2 * sizeof(int) + sizeof(DdSubtable));
+@@ -2651,6 +2653,8 @@ ddResizeTable(
+ 		return(0);
+ 	    }
+ 	    unique->memused += (newsize - unique->maxSize) * sizeof(int);
++	} else {
++	    newmap = NULL;
+ 	}
+ 	unique->memused += (newsize - unique->maxSize) * ((numSlots+1) *
+ 	    sizeof(DdNode *) + 2 * sizeof(int) + sizeof(DdSubtable));
+--- ./cudd/cuddHarwell.c.orig	2012-02-04 18:07:33.000000000 -0700
++++ ./cudd/cuddHarwell.c	2012-02-20 15:16:44.884399149 -0700
+@@ -261,7 +261,7 @@ Cudd_addHarwell(
+ 		return(0);
+ 	    }
+ 	} else {
+-	    *x = *xn = NULL;
++	    *x = lx = *xn = lxn = NULL;
+ 	}
+     } else if (lnx > *nx) {
+ 	*x = lx = REALLOC(DdNode *, *x, lnx);
+@@ -291,7 +291,7 @@ Cudd_addHarwell(
+ 		return(0);
+ 	    }
+ 	} else {
+-	    *y = *yn_ = NULL;
++	    *y = ly = *yn_ = lyn = NULL;
+ 	}
+     } else if (lny > *ny) {
+ 	*y = ly = REALLOC(DdNode *, *y, lny);
+--- ./dddmp/dddmpStoreCnf.c.orig	2004-02-19 15:15:53.000000000 -0700
++++ ./dddmp/dddmpStoreCnf.c	2012-02-20 15:16:44.885399147 -0700
+@@ -1338,9 +1338,6 @@ StoreCnfBestNotSharedRecur (
+ {
+   DdNode *N, *Nv, *Nnv;
+   int index, retValue;
+-  DdNode *one;
+-    
+-  one = ddMgr->one;
+  
+   N = Cudd_Regular (node);
+ 
+@@ -1459,10 +1456,7 @@ StoreCnfBestSharedRecur (
+   )
+ {
+   DdNode *nodeThen, *nodeElse;
+-  int i, idf, index;
+-  DdNode *one;
+-    
+-  one = ddMgr->one;
++  int i, idf;
+ 
+   Dddmp_Assert (node==Cudd_Regular(node),
+     "Inverted Edge during Shared Printing.");
+@@ -1517,7 +1511,6 @@ StoreCnfBestSharedRecur (
+ 
+   nodeThen  = cuddT (node);
+   nodeElse = cuddE (node);
+-  index = node->index;
+ 
+   StoreCnfBestSharedRecur (ddMgr, Cudd_Regular (nodeThen), bddIds, cnfIds,
+     fp, list, clauseN, varMax);
+--- ./dddmp/dddmpNodeCnf.c.orig	2004-02-18 09:24:31.000000000 -0700
++++ ./dddmp/dddmpNodeCnf.c	2012-02-20 15:16:44.890399143 -0700
+@@ -55,7 +55,6 @@
+ /*---------------------------------------------------------------------------*/
+ 
+ static int DddmpWriteNodeIndexCnfWithTerminalCheck(DdNode *f, int *cnfIds, int id);
+-static int DddmpClearVisitedCnfRecur(DdNode *f);
+ static void DddmpClearVisitedCnf(DdNode *f);
+ static int NumberNodeRecurCnf(DdNode *f, int *cnfIds, int id);
+ static void DddmpDdNodesCheckIncomingAndScanPath(DdNode *f, int pathLengthCurrent, int edgeInTh, int pathLengthTh);
+@@ -142,7 +141,7 @@ DddmpDdNodesCountEdgesAndNumber (
+   int id              /* OUT: Number of Temporary Variables Introduced */
+   )
+ {
+-  int retValue, i;
++  int i;
+ 
+   /*-------------------------- Remove From Unique ---------------------------*/
+ 
+@@ -153,7 +152,7 @@ DddmpDdNodesCountEdgesAndNumber (
+   /*-------------------- Reset Counter and Reset Visited --------------------*/
+ 
+   for (i=0; i<rootN; i++) {
+-    retValue = DddmpDdNodesResetCountRecur (f[i]);
++    DddmpDdNodesResetCountRecur (f[i]);
+   }
+ 
+   /*  Here we must have:
+@@ -170,7 +169,7 @@ DddmpDdNodesCountEdgesAndNumber (
+   /*----------------------- Count Incoming Edges ----------------------------*/
+ 
+   for (i=0; i<rootN; i++) {
+-    retValue = DddmpDdNodesCountEdgesRecur (f[i]);
++    DddmpDdNodesCountEdgesRecur (f[i]);
+   }
+ 
+   /*  Here we must have:
+@@ -430,43 +429,6 @@ DddmpWriteNodeIndexCnfWithTerminalCheck
+ 
+ /**Function********************************************************************
+ 
+-  Synopsis     [Mark ALL nodes as not visited]
+-
+-  Description  [Mark ALL nodes as not visited (it recurs on the node children)]
+-
+-  SideEffects  [None]
+-
+-  SeeAlso      [DddmpVisitedCnf (), DddmpSetVisitedCnf ()]
+-
+-******************************************************************************/
+-
+-static int
+-DddmpClearVisitedCnfRecur (
+-  DdNode *f     /* IN: root of the BDD to be marked */
+-  )
+-{
+-  int retValue;
+-
+-  f = Cudd_Regular(f);
+-
+-  if (cuddIsConstant (f)) {
+-    return (DDDMP_SUCCESS);
+-  }
+-
+-  if (!DddmpVisitedCnf (f)) {
+-    return (DDDMP_SUCCESS);
+-  }
+-
+-  retValue = DddmpClearVisitedCnfRecur (cuddT (f));
+-  retValue = DddmpClearVisitedCnfRecur (cuddE (f));
+-
+-  DddmpClearVisitedCnf (f);
+-
+-  return (DDDMP_SUCCESS);
+-}
+-
+-/**Function********************************************************************
+-
+   Synopsis     [Marks a node as not visited]
+ 
+   Description  [Marks a node as not visited]
+@@ -660,8 +622,6 @@ DddmpDdNodesResetCountRecur (
+   DdNode *f  /*  IN: root of the BDD whose counters are reset */
+   )
+ {
+-  int retValue;
+-
+   f = Cudd_Regular (f);
+ 
+   if (!DddmpVisitedCnf (f)) {
+@@ -669,8 +629,8 @@ DddmpDdNodesResetCountRecur (
+   }
+ 
+   if (!cuddIsConstant (f)) {
+-    retValue = DddmpDdNodesResetCountRecur (cuddT (f));
+-    retValue = DddmpDdNodesResetCountRecur (cuddE (f));
++    DddmpDdNodesResetCountRecur (cuddT (f));
++    DddmpDdNodesResetCountRecur (cuddE (f));
+   }
+ 
+   DddmpWriteNodeIndexCnf (f, 0);
+@@ -698,7 +658,7 @@ DddmpDdNodesCountEdgesRecur (
+   DdNode *f    /* IN: root of the BDD */
+   )
+ {
+-  int indexValue, retValue;
++  int indexValue;
+ 
+   f = Cudd_Regular (f);
+ 
+@@ -714,8 +674,8 @@ DddmpDdNodesCountEdgesRecur (
+ 
+   /* IF (first time) THEN recur */
+   if (indexValue == 0) {
+-    retValue = DddmpDdNodesCountEdgesRecur (cuddT (f));
+-    retValue = DddmpDdNodesCountEdgesRecur (cuddE (f));
++    DddmpDdNodesCountEdgesRecur (cuddT (f));
++    DddmpDdNodesCountEdgesRecur (cuddE (f));
+   }
+ 
+   /* Increment Incoming-Edge Count Flag */
+@@ -893,7 +853,6 @@ DddmpPrintBddAndNextRecur (
+   DdNode *f          /* IN: root of the BDD to be displayed */
+   )
+ {
+-  int retValue;
+   DdNode *fPtr, *tPtr, *ePtr;
+     
+   fPtr = Cudd_Regular (f);
+@@ -923,8 +882,8 @@ DddmpPrintBddAndNextRecur (
+     ePtr = Cudd_Not (ePtr);
+   }
+ 
+-  retValue = DddmpPrintBddAndNextRecur (ddMgr, tPtr);
+-  retValue = DddmpPrintBddAndNextRecur (ddMgr, ePtr);
++  DddmpPrintBddAndNextRecur (ddMgr, tPtr);
++  DddmpPrintBddAndNextRecur (ddMgr, ePtr);
+ 
+   return (DDDMP_SUCCESS);
+ }
+--- ./dddmp/dddmpStoreAdd.c.orig	2004-02-18 09:24:38.000000000 -0700
++++ ./dddmp/dddmpStoreAdd.c	2012-02-20 15:23:34.619980598 -0700
+@@ -746,12 +746,8 @@ NodeStoreRecurAdd (
+   int idT = (-1);
+   int idE = (-1);
+   int vf = (-1);
+-  int vT = (-1);
+-  int vE = (-1);
+   int retValue;
+-  int nVars;
+ 
+-  nVars = ddMgr->size;
+   T = E = NULL;
+   idf = idT =  idE = (-1);
+ 
+@@ -814,18 +810,7 @@ NodeStoreRecurAdd (
+     vf = f->index;
+ 
+     idT = DddmpReadNodeIndexAdd (T);
+-    if (Cudd_IsConstant(T)) {
+-      vT = nVars;
+-    } else {
+-      vT = T->index;
+-    }
+-
+     idE = DddmpReadNodeIndexAdd (E);
+-    if (Cudd_IsConstant(E)) {
+-      vE = nVars;
+-    } else {
+-      vE = E->index;
+-    }
+   }
+ 
+   retValue = NodeTextStoreAdd (ddMgr, f, mode, supportids, varnames,

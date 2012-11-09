@@ -1,0 +1,98 @@
+--- ./epd/epd.c.orig	2004-08-24 15:33:13.000000000 -0600
++++ ./epd/epd.c	2012-02-20 13:19:17.802597840 -0700
+@@ -1094,7 +1094,8 @@ EpdGetExponentDecimal(double value)
+ 
+   sprintf(str, "%E", value);
+   pos = strstr(str, "E");
+-  sscanf(pos, "E%d", &exponent);
++  if (sscanf(pos, "E%d", &exponent) == EOF)
++    exponent = 0;
+   return(exponent);
+ }
+ 
+--- ./dddmp/dddmpLoad.c.orig	2009-02-17 17:41:45.000000000 -0700
++++ ./dddmp/dddmpLoad.c	2012-02-20 13:19:17.794597849 -0700
+@@ -1109,7 +1109,8 @@ DddmpCuddDdArrayLoad (
+ 
+   /*------------------------ Deal With the File Tail -----------------------*/
+ 
+-  fgets (buf, DDDMP_MAXSTRLEN-1,fp);
++  if (fgets (buf, DDDMP_MAXSTRLEN-1,fp) == NULL)
++    buf[0] = '\0';
+   Dddmp_CheckAndGotoLabel (!matchkeywd(buf, ".end"),
+     "Error .end not found.", failure);
+ 
+@@ -1273,7 +1274,8 @@ DddmpBddReadHeader (
+ 
+     /* comment */
+     if (buf[0] == '#') {
+-      fgets(buf,DDDMP_MAXSTRLEN,fp);
++      if (fgets(buf,DDDMP_MAXSTRLEN,fp) == NULL)
++	buf[0] = '\0';
+       continue;
+     }
+ 
+@@ -1426,7 +1428,8 @@ DddmpBddReadHeader (
+     }
+ 
+     if (matchkeywd(buf, ".nodes")) {
+-      fgets(buf,DDDMP_MAXSTRLEN,fp);
++      if (fgets(buf,DDDMP_MAXSTRLEN,fp) == NULL)
++	buf[0] = '\0';
+       break;
+     }
+ 
+--- ./dddmp/dddmpDbg.c.orig	2004-02-18 09:23:31.000000000 -0700
++++ ./dddmp/dddmpDbg.c	2012-02-20 13:19:17.787597856 -0700
+@@ -97,7 +97,8 @@ Dddmp_cuddBddDisplayBinary(
+   while (fgets(buf, 999,fp)!=NULL) {
+     fprintf (fpo, "%s", buf);
+     if (strncmp(buf, ".nnodes", 7) == 0) {
+-      sscanf (buf, "%*s %d", &nnodes);
++      if (sscanf (buf, "%*s %d", &nnodes) == EOF)
++	break;
+     }
+     if (strncmp(buf, ".rootids", 8) == 0) {
+       break;
+@@ -141,7 +142,8 @@ Dddmp_cuddBddDisplayBinary(
+ 
+   }
+ 
+-  fgets(buf, 999,fp);
++  if (fgets(buf, 999,fp) == NULL)
++    buf[0] = '\0';
+   if (strncmp(buf, ".end", 4) != 0) {
+     return (0);
+   }
+--- ./dddmp/dddmpLoadCnf.c.orig	2004-02-20 01:35:56.000000000 -0700
++++ ./dddmp/dddmpLoadCnf.c	2012-02-20 13:19:17.802597840 -0700
+@@ -554,7 +554,8 @@ DddmpBddReadHeaderCnf (
+ 
+     /* Init Problem Line */ 
+     if (buf[0] == 'p') {
+-      fscanf (fp, "%*s %d %d", &nv, &nc);
++      if (fscanf (fp, "%*s %d %d", &nv, &nc) == EOF)
++	break;
+       Hdr->nVarsCnf = nv;
+       Hdr->nClausesCnf = nc;
+       break;
+@@ -569,7 +570,8 @@ DddmpBddReadHeaderCnf (
+ 
+     /* Skip Comment? */
+     if (buf[0] != '.') {
+-      fgets (buf, DDDMP_MAXSTRLEN, fp);
++      if (fgets (buf, DDDMP_MAXSTRLEN, fp) == NULL)
++	buf[0] = '\0';
+       continue;
+     }
+ 
+@@ -811,7 +813,8 @@ DddmpReadCnfClauses (
+     /* Check for Comment */
+     if (word[0] == 'c') {
+       /* Comment Found: Skip line */
+-      fgets (word, DDDMP_MAX_CNF_ROW_LENGTH-1, fp);
++      if (fgets (word, DDDMP_MAX_CNF_ROW_LENGTH-1, fp) == NULL)
++	word[0] = '\0';
+       break;
+     }
+ 

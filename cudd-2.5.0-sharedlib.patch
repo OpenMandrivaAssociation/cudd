@@ -1,0 +1,516 @@
+--- ./Makefile.orig	2012-02-04 23:48:43.000000000 -0700
++++ ./Makefile	2012-02-20 13:12:02.258219178 -0700
+@@ -198,7 +198,7 @@ DDWDIR	= .
+ IDIR	= $(DDWDIR)/include
+ INCLUDE = -I$(IDIR)
+ 
+-BDIRS	= cudd dddmp mtr st util epd
++BDIRS	= util epd mtr st cudd dddmp
+ DIRS	= $(BDIRS) nanotrav
+ 
+ #------------------------------------------------------------------------
+@@ -214,26 +214,32 @@ DIRS	= $(BDIRS) nanotrav
+ .PHONY : testmtr
+ .PHONY : lint
+ .PHONY : all
++.PHONY : static
+ .PHONY : clean
+ .PHONY : distclean
+ 
+ 
+ build:
+ 	sh ./setup.sh
+-	@for dir in $(DIRS); do \
++	@for dir in $(DIRS) obj; do \
+ 		(cd $$dir; \
+ 		echo Making $$dir ...; \
+-		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
++		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
+ 	done
+ 
+-nanotrav: build
++cudd: mtr st util epd
++dddmp: cudd
++epd: util
++mtr: util
++nanotrav: dddmp
++st: util
+ 
+ check_leaks:
+ 	sh ./setup.sh
+ 	@for dir in mnemosyne $(DIRS); do \
+ 		(cd $$dir; \
+ 		echo Making $$dir ...; \
+-		make CC=$(CC) RANLIB=$(RANLIB) MFLAG=$(MFLAG) MNEMLIB=$(MNEMLIB) ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" EXE="$(EXE)" )\
++		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG=$(MFLAG) MNEMLIB=$(MNEMLIB) ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" EXE="$(EXE)" )\
+ 	done
+ 
+ optimize_dec:
+@@ -241,7 +247,7 @@ optimize_dec:
+ 	@for dir in $(DIRS); do \
+ 		(cd $$dir; \
+ 		echo Making $$dir ...; \
+-		make CC=$(CC) RANLIB=$(RANLIB) XCFLAGS="$(XCFLAGS)" LDFLAGS="$(LDFLAGS)" optimize_dec )\
++		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) XCFLAGS="$(XCFLAGS)" LDFLAGS="$(LDFLAGS)" optimize_dec )\
+ 	done
+ 
+ lint:
+@@ -249,7 +255,7 @@ lint:
+ 	@for dir in $(DIRS) obj; do \
+ 		(cd $$dir; \
+ 		echo Making lint in $$dir ...; \
+-		make CC=$(CC) lint )\
++		$(MAKE) CC=$(CC) lint )\
+ 	done
+ 
+ tags:
+@@ -257,15 +263,23 @@ tags:
+ 	@for dir in $(DIRS) obj; do \
+ 		(cd $$dir; \
+ 		echo Making tags in $$dir ...; \
+-		make CC=$(CC) tags )\
++		$(MAKE) CC=$(CC) tags )\
+ 	done
+ 
+ all:
+ 	sh ./setup.sh
+-	@for dir in $(DIRS); do \
++	@for dir in $(DIRS) obj; do \
+ 		(cd $$dir; \
+ 		echo Making all in $$dir ...; \
+-		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" all )\
++		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" all )\
++	done
++
++static:
++	sh ./setup.sh
++	@for dir in $(DIRS) obj; do \
++		(cd $$dir; \
++		echo Making static in $$dir ...; \
++		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" static )\
+ 	done
+ 
+ testcudd:
+@@ -273,49 +287,49 @@ testcudd:
+ 	@for dir in util st mtr epd; do \
+ 		(cd $$dir; \
+ 		echo Making $$dir ...; \
+-		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
++		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
+ 	done
+ 	@(cd cudd; \
+ 	echo Making testcudd ...; \
+-	make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testcudd$(EXE) )
++	$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testcudd$(EXE) )
+ 
+ objlib:
+ 	sh ./setup.sh
+ 	@for dir in $(BDIRS); do \
+ 		(cd $$dir; \
+ 		echo Making $$dir ...; \
+-		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
++		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
+ 	done
+ 	@(cd obj; \
+ 	echo Making obj ...; \
+-	make CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )
++	$(MAKE) CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )
+ 
+ testobj: objlib
+ 	@(cd obj; \
+ 	echo Making testobj ...; \
+-	make CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testobj$(EXE) )
++	$(MAKE) CXX=$(CXX) CXXFLAGS=$(CXXFLAGS) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testobj$(EXE) )
+ 
+ testdddmp: build
+ 	@(cd dddmp; \
+ 	echo Making testdddmp ...; \
+-	make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testdddmp$(EXE) )
++	$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testdddmp$(EXE) )
+ 
+ testmtr: build
+ 	@(cd mtr; \
+ 	echo Making testmtr ...; \
+-	make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testmtr$(EXE) )
++	$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testmtr$(EXE) )
+ 
+ clean:
+ 	@for dir in mnemosyne $(DIRS) obj; do	\
+ 	    (cd $$dir;	\
+ 	     echo Cleaning $$dir ...; \
+-	     make -s clean	) \
++	     $(MAKE) -s clean	) \
+ 	done
+ 
+ distclean:
+ 	@for dir in mnemosyne $(DIRS) obj; do	\
+ 	    (cd $$dir;	\
+ 	     echo Cleaning $$dir ...; \
+-	     make -s EXE="$(EXE)" distclean	) \
++	     $(MAKE) -s EXE="$(EXE)" distclean	) \
+ 	done
+ 	sh ./shutdown.sh
+--- ./util/Makefile.orig	2012-02-04 22:36:31.000000000 -0700
++++ ./util/Makefile	2012-02-20 13:08:15.198445281 -0700
+@@ -12,6 +12,8 @@ MFLAG   =
+ ICFLAGS = -g
+ CFLAGS  = $(ICFLAGS) $(MFLAG) $(XCFLAGS)
+ 
++SHLINK	= -shared -Xlinker -soname -Xlinker libcudd$(P).so.2
++
+ LINTFLAGS = -u -n
+ 
+ # this is to create the lint library
+@@ -27,6 +29,11 @@ PHDR	= util.h
+ WHERE	= ..
+ INCLUDE = $(WHERE)/include
+ 
++libcudd$(P).so.2.5.0: $(POBJ)
++	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(POBJ) $(SHLINK)
++	ln -s libcudd$(P).so.2.5.0 libcudd$(P).so.2
++	ln -s libcudd$(P).so.2 libcudd$(P).so
++
+ lib$(P).a: $(POBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+@@ -55,7 +62,9 @@ llib-l$(P).ln: $(PSRC) $(PHDR)
+ tags: $(PSRC) $(PHDR)
+ 	ctags $(PSRC) $(PHDR)
+ 
+-all: lib$(P).a lib$(P).b llib-l$(P).ln tags
++all: libcudd$(P).so.2.5.0 lib$(P).b llib-l$(P).ln tags
++
++static: lib$(P).a
+ 
+ clean:
+ 	rm -f *.o *.u core *.warnings
+--- ./epd/Makefile.orig	2003-12-31 09:31:30.000000000 -0700
++++ ./epd/Makefile	2012-02-20 13:08:15.196445283 -0700
+@@ -11,6 +11,9 @@ MFLAG	=
+ ICFLAGS = -g -O6 -Wall
+ CFLAGS  = $(ICFLAGS) $(MFLAG) $(XCFLAGS)
+ 
++SHLINK	= -shared -Xlinker -soname -Xlinker lib$(P).so.2 -L$(WHERE)/util \
++	-lcuddutil -lm
++
+ LINTFLAGS = -u -n
+ 
+ # this is to create the lint library
+@@ -27,6 +30,11 @@ INCLUDE = $(WHERE)/include
+ 
+ #---------------------------
+ 
++lib$(P).so.2.5.0: $(POBJ)
++	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(POBJ) $(SHLINK)
++	ln -s lib$(P).so.2.5.0 lib$(P).so.2
++	ln -s lib$(P).so.2 lib$(P).so
++
+ lib$(P).a: $(POBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+@@ -55,7 +63,9 @@ llib-l$(P).ln: $(PSRC) $(PHDR)
+ tags: $(PSRC) $(PHDR)
+ 	ctags $(PSRC) $(PHDR)
+ 
+-all: lib$(P).a lib$(P).b llib-l$(P).ln tags
++all: lib$(P).so.2.5.0 lib$(P).b llib-l$(P).ln tags
++
++static: lib$(P).a
+ 
+ clean:
+ 	rm -f *.o *.u .pure *.warnings
+--- ./mtr/Makefile.orig	2004-01-01 11:47:16.000000000 -0700
++++ ./mtr/Makefile	2012-02-20 13:08:15.197445282 -0700
+@@ -39,6 +39,9 @@ UBJ	= $(SRC:.c=.u)
+ TARGET	= test$(P)$(EXE)
+ TARGETu	= test$(P)-u
+ 
++SHLINK	= -shared -Xlinker -soname -Xlinker lib$(P).so.2 -L$(WHERE)/util \
++	-lcuddutil
++
+ LIBS	= ./libmtr.a $(WHERE)/util/libutil.a
+ 
+ BLIBS	= -kL. -klmtr -kL$(WHERE)/util -klutil
+@@ -49,6 +52,11 @@ LINTLIBS = llib-l$(P).ln
+ 
+ #---------------------------
+ 
++lib$(P).so.2.5.0: $(POBJ)
++	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(POBJ) $(SHLINK)
++	ln -s lib$(P).so.2.5.0 lib$(P).so.2
++	ln -s lib$(P).so.2 lib$(P).so
++
+ lib$(P).a: $(POBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+@@ -79,7 +87,9 @@ llib-l$(P).ln: $(PSRC) $(PHDR)
+ tags: $(PSRC) $(PHDR)
+ 	ctags $(PSRC) $(PHDR)
+ 
+-all: lib$(P).a lib$(P).b llib-l$(P).ln tags
++all: lib$(P).so.2.5.0 lib$(P).b llib-l$(P).ln tags
++
++static: lib$(P).a
+ 
+ $(TARGET): $(POBJ) $(OBJ) $(LIBS) $(MNEMLIB)
+ 	$(PURE) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ) $(LIBS) $(MNEMLIB) -lm
+--- ./nanotrav/Makefile.orig	1999-08-31 13:12:55.000000000 -0600
++++ ./nanotrav/Makefile	2012-02-20 13:08:15.197445282 -0700
+@@ -19,6 +19,14 @@ WHERE	= ..
+ 
+ INCLUDE = $(WHERE)/include
+ 
++SHLINK	= -L$(WHERE)/dddmp -L$(WHERE)/cudd -L$(WHERE)/mtr -L$(WHERE)/st \
++	-L$(WHERE)/util -L$(WHERE)/epd -ldddmp -lcudd -lmtr -lcuddst \
++	-lcuddutil -lepd
++
++SHLIBS	= $(WHERE)/dddmp/libdddmp.so.2.5.0 $(WHERE)/cudd/libcudd.so.2.5.0 \
++	$(WHERE)/mtr/libmtr.so.2.5.0 $(WHERE)/st/libcuddst.so.2.5.0 \
++	$(WHERE)/util/libcuddutil.so.2.5.0 $(WHERE)/epd/libepd.so.2.5.0
++
+ LIBS	= $(WHERE)/dddmp/libdddmp.a $(WHERE)/cudd/libcudd.a \
+ 	$(WHERE)/mtr/libmtr.a $(WHERE)/st/libst.a $(WHERE)/util/libutil.a \
+ 	$(WHERE)/epd/libepd.a
+@@ -60,8 +68,8 @@ LINTFLAGS = -u -n -DDD_STATS -DDD_CACHE_
+ 
+ #------------------------------------------------------
+ 
+-$(TARGET): $(SRC) $(OBJ) $(HDR) $(LIBS) $(MNEMLIB)
+-	$(PURE) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ) $(LIBS) $(MNEMLIB) -lm
++$(TARGET): $(SRC) $(OBJ) $(HDR) $(SHLIBS) $(MNEMLIB)
++	$(PURE) $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJ) $(SHLINK) $(MNEMLIB) -lm
+ 
+ .c.o: $(HDR)
+ 	$(CC) -c $< -I$(INCLUDE) $(CFLAGS) $(DDDEBUG)
+@@ -87,6 +95,8 @@ tags: $(SRC) $(HDR)
+ 
+ all: $(TARGET) $(TARGETu) lint tags
+ 
++static:
++
+ pixie: $(TARGETu)
+ 	pixie $(TARGETu)
+ 
+--- ./cudd/Makefile.orig	1999-08-19 16:34:24.000000000 -0600
++++ ./cudd/Makefile	2012-02-20 13:08:15.195445284 -0700
+@@ -27,6 +27,10 @@ WHERE	= ..
+ 
+ INCLUDE = $(WHERE)/include
+ 
++SHLINK	= -shared -Xlinker -soname -Xlinker lib$(P).so.2 \
++	-L$(WHERE)/mtr -L$(WHERE)/st -L$(WHERE)/util -L$(WHERE)/epd \
++	-lmtr -lcuddst -lcuddutil -lepd -lm
++
+ LIBS	= ./libcudd.a $(WHERE)/mtr/libmtr.a \
+ 	$(WHERE)/st/libst.a $(WHERE)/util/libutil.a $(WHERE)/epd/libepd.a
+ 
+@@ -71,6 +75,11 @@ UBJ	= $(SRC:.c=.u)
+ 
+ #------------------------------------------------------
+ 
++lib$(P).so.2.5.0: $(POBJ)
++	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(POBJ) $(SHLINK)
++	ln -s lib$(P).so.2.5.0 lib$(P).so.2
++	ln -s lib$(P).so.2 lib$(P).so
++
+ lib$(P).a: $(POBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+@@ -111,7 +120,9 @@ lintpgm: lint
+ tags: $(PSRC) $(PHDR)
+ 	ctags $(PSRC) $(PHDR)
+ 
+-all: lib$(P).a lib$(P).b llib-l$(P).ln tags
++all: lib$(P).so.2.5.0 lib$(P).b llib-l$(P).ln tags
++
++static: lib$(P).a
+ 
+ programs: $(TARGET) $(TARGETu) lintpgm
+ 
+--- ./cudd/doc/node3.html.orig	2012-02-04 20:05:02.000000000 -0700
++++ ./cudd/doc/node3.html	2012-02-20 13:08:15.195445284 -0700
+@@ -154,16 +154,18 @@ Compiling and Linking
+ <P>
+ To build an application that uses the CUDD package, you should add
+ <PRE>
+-#include "util.h"
+-#include "cudd.h"
++#include &lt;util.h&gt;
++#include &lt;cudd.h&gt;
+ </PRE>
+ <A NAME="82"></A>
+-to your source files, and should link
++to your source files, compile with <CODE>-I/usr/include/cudd</CODE>, and link
+ <code>libcudd.a</code><A NAME="83"></A>,
+ <code>libmtr.a</code><A NAME="84"></A>,
+ <code>libst.a</code><A NAME="85"></A>, and
+ <code>libutil.a</code><A NAME="86"></A> to your executable. (All these
+-libraries are part of the distribution.) Some
++libraries are part of the distribution.)  Note that shared library equivalents
++are also available, and are linked to one another appropriately; i.e., it is
++sufficient to add <CODE>-lcudd</CODE> to your link command.  Some
+ platforms require specific compiler and linker flags.  Refer to the
+ <TT>Makefile<A NAME="87"></A></TT> in the top level directory of the
+ distribution.
+--- ./st/Makefile.orig	2004-01-01 09:53:24.000000000 -0700
++++ ./st/Makefile	2012-02-20 13:08:15.198445281 -0700
+@@ -11,6 +11,9 @@ MFLAG	=
+ ICFLAGS = -g -O6 -Wall
+ CFLAGS  = $(ICFLAGS) $(MFLAG) $(XCFLAGS)
+ 
++SHLINK	= -shared -Xlinker -soname -Xlinker libcudd$(P).so.2 -L$(WHERE)/util \
++	-lcuddutil
++
+ LINTFLAGS = -u -n
+ 
+ # this is to create the lint library
+@@ -27,6 +30,11 @@ INCLUDE = $(WHERE)/include
+ 
+ #---------------------------
+ 
++libcudd$(P).so.2.5.0: $(POBJ)
++	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(POBJ) $(SHLINK)
++	ln -s libcudd$(P).so.2.5.0 libcudd$(P).so.2
++	ln -s libcudd$(P).so.2 libcudd$(P).so
++
+ lib$(P).a: $(POBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+@@ -55,7 +63,9 @@ llib-l$(P).ln: $(PSRC) $(PHDR)
+ tags: $(PSRC) $(PHDR)
+ 	ctags $(PSRC) $(PHDR)
+ 
+-all: lib$(P).a lib$(P).b llib-l$(P).ln tags
++all: libcudd$(P).so.2.5.0 lib$(P).b llib-l$(P).ln tags
++
++static: lib$(P).a
+ 
+ clean:
+ 	rm -f *.o *.u .pure *.warnings
+--- ./obj/Makefile.orig	2012-02-04 18:49:02.000000000 -0700
++++ ./obj/Makefile	2012-02-20 13:08:15.197445282 -0700
+@@ -27,6 +27,8 @@ WHERE	= ..
+ 
+ INCLUDE = $(WHERE)/include
+ 
++SHLINK	= -shared -Xlinker -soname -Xlinker lib$(PP).so.2
++
+ LIBS	= ./libobj.a $(WHERE)/cudd/libcudd.a $(WHERE)/mtr/libmtr.a \
+ 	$(WHERE)/st/libst.a $(WHERE)/util/libutil.a $(WHERE)/epd/libepd.a
+ 
+@@ -43,6 +45,7 @@ LDFLAGS =
+ 
+ # files for the package
+ P	= obj
++PP	= cudd$(P)
+ PSRC	= cuddObj.cc
+ PHDR	= cuddObj.hh $(INCLUDE)/cudd.h
+ POBJ	= $(PSRC:.cc=.o)
+@@ -57,7 +60,12 @@ UBJ	= $(SRC:.cc=.u)
+ 
+ #------------------------------------------------------
+ 
+-lib$(P).a: $(POBJ)
++lib$(PP).so.2.5.0: $(POBJ) $(WHERE)/cudd/libcudd.so
++	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(POBJ) $(SHLINK) -Wl,--as-needed -L$(WHERE)/cudd -lcudd
++	ln -s lib$(PP).so.2.5.0 lib$(PP).so.2
++	ln -s lib$(PP).so.2 lib$(PP).so
++
++lib$(PP).a: $(POBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+ 
+@@ -66,7 +74,7 @@ lib$(P).a: $(POBJ)
+ 
+ optimize_dec: lib$(P).b
+ 
+-lib$(P).b: $(PUBJ)
++lib$(PP).b: $(PUBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+ 
+@@ -86,9 +94,9 @@ $(TARGET): $(SRC) $(OBJ) $(HDR) $(LIBS)
+ $(TARGETu): $(SRC) $(UBJ) $(HDR) $(LIBS:.a=.b)
+ 	cxx -O3 -Olimit 1000 $(XCFLAGS) $(LDFLAGS) -o $@ $(UBJ) $(BLIBS) -lm
+ 
+-lint: llib-l$(P).ln
++lint: llib-l$(PP).ln
+ 
+-llib-l$(P).ln: $(PSRC) $(PHDR)
++llib-l$(PP).ln: $(PSRC) $(PHDR)
+ 	lint $(LINTFLAGS) $(LINTSWITCH)$(P) -I$(INCLUDE) $(PSRC)
+ 
+ lintpgm: lint
+@@ -97,7 +105,9 @@ lintpgm: lint
+ tags: $(PSRC) $(PHDR)
+ 	ctags $(PSRC) $(PHDR)
+ 
+-all: lib$(P).a lib$(P).b llib-l$(P).ln tags
++all: lib$(PP).so.2.5.0 lib$(PP).b llib-l$(PP).ln tags
++
++static: lib$(PP).a
+ 
+ programs: $(TARGET) $(TARGETu) lintpgm
+ 
+--- ./mnemosyne/Makefile.orig	2009-02-19 23:39:23.000000000 -0700
++++ ./mnemosyne/Makefile	2012-02-20 13:08:15.196445283 -0700
+@@ -19,14 +19,22 @@ CFLAGS	=	-g $(OPTNS) $(XCFLAGS)
+ 
+ #loader flags
+ LDFLGS	=
++SHLINK	= -shared -Xlinker -soname -Xlinker libmnem.so.2
+ 
+ HDRS	=	mnemosyne.h mnemconf.h
+ 
+-all: mnemalyse libmnem.a
++all: mnemalyse libmnem.so.2.5.0
++
++static: libmnem.a
+ 
+ mnemalyse: mnemalyse.o
+ 	$(CC) $(LDFLGS) -o $@ mnemalyse.o
+ 
++libmnem.so.2.5.0: mnemosyne.o
++	$(CC) $(CFLAGS) $(LDFLAGS) $(SHLINK) -o $@ $<
++	ln -s libmnem.so.2.5.0 libmnem.so.2
++	ln -s libmnem.so.2 libmnem.so
++
+ libmnem.a: mnemosyne.o
+ 	ar rcv $@ mnemosyne.o
+ 	$(RANLIB) $@
+--- ./dddmp/Makefile.orig	2012-02-04 20:53:21.000000000 -0700
++++ ./dddmp/Makefile	2012-02-20 13:08:15.195445284 -0700
+@@ -170,6 +170,10 @@ MNEMLIB	= ../mnemosyne/libmnem.a
+ LINTFLAGS = -u -n
+ LINTSWITCH = -o
+ 
++SHLINK	= -shared -Xlinker -soname -Xlinker lib$(P).so.2 \
++	-L$(WHERE)/cudd -L$(WHERE)/mtr -L$(WHERE)/st -L$(WHERE)/util \
++	-L$(WHERE)/epd -lcudd -lcuddst -lcuddutil
++
+ LIBS	= ./libdddmp.a $(WHERE)/cudd/libcudd.a $(WHERE)/mtr/libmtr.a \
+ 	$(WHERE)/st/libst.a $(WHERE)/util/libutil.a $(WHERE)/epd/libepd.a
+ 
+@@ -182,6 +186,11 @@ LINTLIBS = ./llib-ldddmp.ln $(WHERE)/cud
+ 	$(WHERE)/mtr/llib-lmtr.ln $(WHERE)/st/llib-lst.ln \
+ 	$(WHERE)/util/llib-lutil.ln
+ 
++lib$(P).so.2.5.0: $(POBJ)
++	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(POBJ) $(SHLINK)
++	ln -s lib$(P).so.2.5.0 lib$(P).so.2
++	ln -s lib$(P).so.2 lib$(P).so
++
+ lib$(P).a: $(POBJ)
+ 	ar rv $@ $?
+ 	$(RANLIB) $@
+@@ -222,7 +231,9 @@ lintpgm: lint
+ tags: $(PSRC) $(PHDR)
+ 	ctags $(PSRC) $(PHDR)
+ 
+-all: lib$(P).a lib$(P).b llib-l$(P).ln tags
++all: lib$(P).so.2.5.0 lib$(P).b llib-l$(P).ln tags
++
++static: lib$(P).a
+ 
+ programs: $(TARGET) $(TARGETu) lintpgm
+ 
