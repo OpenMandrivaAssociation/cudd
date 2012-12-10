@@ -126,3 +126,15 @@ mv st/doc doc/st
 %doc README LICENSE doc/cudd doc/dddmp doc/mtr doc/st
 %{_includedir}/%{name}
 %{_libdir}/*.so
+
+
+%changelog
+* Fri Aug 17 2012 Paulo Andrade <pcpa@mandriva.com.br> 2.5.0-2
++ Revision: 815176
+- Bump release and rebuild due to package not uploaded.
+
+* Thu Aug 16 2012 Paulo Andrade <pcpa@mandriva.com.br> 2.5.0-1
++ Revision: 815124
+- Import cudd based on http://pkgs.fedoraproject.org/cgit/cudd.git
+- Import cudd package (based on fedora package)
+
