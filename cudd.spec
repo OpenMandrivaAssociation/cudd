@@ -1,14 +1,14 @@
-%define         libcudd         %mklibname cudd 2
-%define         libcudd_devel   %mklibname -d cudd
+%define		old_libcudd		%mklibname cudd 2
+%define		old_libcudd_devel	%mklibname -d cudd
 
 Name:           cudd
 Version:        2.5.0
 Release:        2
 Summary:        CU Decision Diagram Package
-Group:          Sciences/Mathematics
 License:        BSD
 URL:            http://vlsi.colorado.edu/~fabio/CUDD/
 Source0:        ftp://vlsi.Colorado.EDU/pub/%{name}-%{version}.tar.gz
+Source1:        %{name}.rpmlintrc
 # This patch was sent upstream in September 2005.
 # Build shared libraries as well as static archives, and incidentally unbreak
 # parallel make.
@@ -26,34 +26,20 @@ Patch3:         cudd-2.5.0-init.patch
 # On 64 bit platforms, fix the size definitions of void * and long.
 # Use the correct floating point structure based on endianness.
 Patch4:         cudd-2.5.0-arch.patch
-
+%rename %{old_libcudd}
 
 %description
 CUDD is a package for the manipulation of Binary Decision Diagrams
 (BDDs), Algebraic Decision Diagrams (ADDs) and Zero-suppressed
 Binary Decision Diagrams (ZDDs).
 
-
-%package        -n %{libcudd}
-Summary:        Runtime libraries for %{name}
-Group:          Sciences/Mathematics
-Requires:       %{libcudd} = %{version}-%{release}
-
-
-%description    -n %{libcudd}
-Runtime libraries for %{name}.
-
-
-%package        -n %{libcudd_devel}
+%package        devel
 Summary:        Header files and man pages for %{name}
-Group:          Development/C++
-Requires:       %{libcudd} = %{version}-%{release}
-Provides:       %{name}-devel = %{version}-%{release}
+Requires:       %{name}%{?_isa} = %{version}-%{release}
+%rename %{old_libcudd_devel}
 
-
-%description    -n %{libcudd_devel}
+%description    devel
 Development headers and man pages for %{name}.
-
 
 %prep
 %setup -q
@@ -70,12 +56,13 @@ for f in dddmp/README.*; do
   mv -f ${f}.fixed $f
 done
 
+# Some files are only readable by user/group
+find . -name \*.c | xargs chmod a+r
 
 %build
 # Build the shared libraries and binaries
 make %{?_smp_mflags} CPPFLAGS="%{optflags}" ICFLAGS="%{optflags} -fPIC" \
   XCFLAGS="-DHAVE_IEEE_754 -DBSD"
-
 
 %install
 # Install the shared libraries
@@ -110,31 +97,13 @@ mv nanotrav/doc doc/nanotrav
 mv nanotrav/README doc/nanotrav
 mv st/doc doc/st
 
-
 %files
 %doc README LICENSE RELEASE.NOTES doc/nanotrav
 %{_bindir}/nanotrav
 %{_mandir}/man1/*
-
-
-%files -n %{libcudd}
-%doc README LICENSE doc/cudd doc/dddmp doc/mtr doc/st
 %{_libdir}/*.so.*
 
-
-%files -n %{libcudd_devel}
-%doc README LICENSE doc/cudd doc/dddmp doc/mtr doc/st
+%files devel
+%doc doc/cudd doc/dddmp doc/mtr doc/st
 %{_includedir}/%{name}
 %{_libdir}/*.so
-
-
-%changelog
-* Fri Aug 17 2012 Paulo Andrade <pcpa@mandriva.com.br> 2.5.0-2
-+ Revision: 815176
-- Bump release and rebuild due to package not uploaded.
-
-* Thu Aug 16 2012 Paulo Andrade <pcpa@mandriva.com.br> 2.5.0-1
-+ Revision: 815124
-- Import cudd based on http://pkgs.fedoraproject.org/cgit/cudd.git
-- Import cudd package (based on fedora package)
-
