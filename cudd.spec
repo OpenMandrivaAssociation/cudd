@@ -3,7 +3,7 @@
 
 Name:           cudd
 Version:        2.5.0
-Release:        3
+Release:        4
 Summary:        CU Decision Diagram Package
 License:        BSD
 URL:            http://vlsi.colorado.edu/~fabio/CUDD/
