@@ -6,7 +6,7 @@ Version:        2.5.0
 Release:        4
 Summary:        CU Decision Diagram Package
 License:        BSD
-URL:            http://vlsi.colorado.edu/~fabio/CUDD/
+URL:            https://vlsi.colorado.edu/~fabio/CUDD/
 Source0:        ftp://vlsi.Colorado.EDU/pub/%{name}-%{version}.tar.gz
 Source1:        %{name}.rpmlintrc
 # This patch was sent upstream in September 2005.
